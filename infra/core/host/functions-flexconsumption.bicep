@@ -14,7 +14,12 @@ param identityId string
 
 // Runtime Properties
 @allowed([
-  'dotnet-isolated', 'node', 'python', 'java', 'powershell', 'custom'
+  'dotnet-isolated'
+  'node'
+  'python'
+  'java'
+  'powershell'
+  'custom'
 ])
 param runtimeName string
 @allowed(['3.10', '3.11', '7.4', '8.0', '10', '11', '17', '20'])
@@ -26,6 +31,17 @@ param appSettings object = {}
 param instanceMemoryMB int = 2048
 param maximumInstanceCount int = 100
 
+var userAssignedIdentities = identityType == 'UserAssigned'
+  ? {
+      type: identityType
+      userAssignedIdentities: {
+        '${identityId}': {}
+      }
+    }
+  : {
+      type: identityType
+    }
+
 resource stg 'Microsoft.Storage/storageAccounts@2022-09-01' existing = {
   name: storageAccountName
 }
@@ -35,12 +51,7 @@ resource functions 'Microsoft.Web/sites@2023-12-01' = {
   location: location
   tags: tags
   kind: kind
-  identity: {
-    type: identityType
-    userAssignedIdentities: { 
-      '${identityId}': {}
-    }
-  }
+  identity: userAssignedIdentities
   properties: {
     serverFarmId: appServicePlanId
     functionAppConfig: {
@@ -50,7 +61,7 @@ resource functions 'Microsoft.Web/sites@2023-12-01' = {
           value: '${stg.properties.primaryEndpoints.blob}deploymentpackage'
           authentication: {
             type: identityType == 'SystemAssigned' ? 'SystemAssignedIdentity' : 'UserAssignedIdentity'
-            userAssignedIdentityResourceId: identityType == 'UserAssigned' ? identityId : '' 
+            userAssignedIdentityResourceId: identityType == 'UserAssigned' ? identityId : ''
           }
         }
       }
@@ -64,16 +75,20 @@ resource functions 'Microsoft.Web/sites@2023-12-01' = {
       }
     }
     virtualNetworkSubnetId: virtualNetworkSubnetId
+    keyVaultReferenceIdentity: identityType == 'UserAssigned' ? identityId : 'SystemAssigned'
+
+    siteConfig: {
+      keyVaultReferenceIdentity: identityType == 'UserAssigned' ? identityId : 'SystemAssigned'
+    }
   }
 
   resource configAppSettings 'config' = {
     name: 'appsettings'
-    properties: union(appSettings,
-      {
-        AzureWebJobsStorage__accountName: stg.name
-        AzureWebJobsStorage__credential : 'managedidentity'
-        APPLICATIONINSIGHTS_CONNECTION_STRING: applicationInsights.properties.ConnectionString
-      })
+    properties: union(appSettings, {
+      AzureWebJobsStorage__accountName: stg.name
+      AzureWebJobsStorage__credential: 'managedidentity'
+      APPLICATIONINSIGHTS_CONNECTION_STRING: applicationInsights.properties.ConnectionString
+    })
   }
 }
 

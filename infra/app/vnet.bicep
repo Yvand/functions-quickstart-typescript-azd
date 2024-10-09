@@ -48,6 +48,9 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-11-01' = {
             {
               service: 'Microsoft.Storage'
             }
+            {
+              service: 'Microsoft.KeyVault'
+            }
           ]
           delegations: [
             {

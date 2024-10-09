@@ -127,6 +127,7 @@
     "synapseWorkspacesSqlPoolsDedicated": "syndp",
     "synapseWorkspacesSqlPoolsSpark": "synsp",
     "timeSeriesInsightsEnvironments": "tsi-",
+    "vaultAccounts": "vault-",
     "webServerFarms": "plan-",
     "webSitesAppService": "app-",
     "webSitesAppServiceEnvironment": "ase-",
