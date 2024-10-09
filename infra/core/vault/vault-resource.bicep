@@ -8,6 +8,7 @@ param publicNetworkAccess string = 'Disabled'
 param sku object = { family: 'A', name: 'standard' }
 param allowedIpAddresses array
 param virtualNetworkSubnetId string
+param enableSoftDelete bool = true
 
 var ipRules = [
   for ipAddress in allowedIpAddresses: {
@@ -22,6 +23,7 @@ resource vault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   properties: {
     sku: sku
     tenantId: tenantId
+    enableSoftDelete: enableSoftDelete
     enableRbacAuthorization: true
     publicNetworkAccess: publicNetworkAccess
     networkAcls: {

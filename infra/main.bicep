@@ -31,6 +31,7 @@ param disableLocalAuth bool = true
 param publicNetworkAccess string = 'Enabled'
 @allowed(['SystemAssigned', 'UserAssigned'])
 param appServiceIdentityType string = 'SystemAssigned'
+param keyVaultEnableSoftDelete bool = true
 
 var abbrs = loadJsonContent('./abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
@@ -179,6 +180,7 @@ module vault './core/vault/vault-resource.bicep' = {
     allowedIpAddresses: allowedIpAddresses
     virtualNetworkSubnetId: serviceVirtualNetwork.outputs.appSubnetID
     tenantId: tenant().tenantId
+    enableSoftDelete: keyVaultEnableSoftDelete
   }
 }
 
