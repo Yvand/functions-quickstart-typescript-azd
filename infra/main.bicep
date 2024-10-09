@@ -15,7 +15,7 @@ param environmentName string
 })
 param location string
 
-@description('List of the public IP addresses allowed to connect to the storage account.')
+@description('List of the public IP addresses allowed to connect to the storage account and the key vault.')
 param allowedIpAddresses array
 
 param processorServiceName string = ''
