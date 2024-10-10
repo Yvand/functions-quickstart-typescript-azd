@@ -7,6 +7,23 @@
     },
     "location": {
       "value": "${AZURE_LOCATION}"
+    },
+    "resourceGroupName": {
+      "value": "${RESOURCEGROUPNAME}"
+    },
+    "appServiceIdentityType": {
+      "value": "SystemAssigned"
+    },
+    "allowedIpAddresses": {
+      "value": [
+        "${ALLOWEDIPADDRESSES}"
+      ]
+    },
+    "appSettings": {
+      "value": {
+        "setting1": "value",
+        "setting2": 42
+      }
     }
   }
 }

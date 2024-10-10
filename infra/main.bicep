@@ -18,6 +18,9 @@ param location string
 @description('List of the public IP addresses allowed to connect to the storage account and the key vault.')
 param allowedIpAddresses array
 
+@description('List of the environment variables to create in the Azure functions service.')
+param appSettings object
+
 param processorServiceName string = ''
 param processorUserAssignedIdentityName string = ''
 param applicationInsightsName string = ''
@@ -71,8 +74,7 @@ module processor './app/processor.bicep' = {
     identityType: appServiceIdentityType
     identityId: appServiceIdentityType == 'UserAssigned' ? processorUserAssignedIdentity.outputs.identityId : ''
     identityClientId: appServiceIdentityType == 'UserAssigned' ? processorUserAssignedIdentity.outputs.identityClientId : ''
-    appSettings: {
-    }
+    appSettings: appSettings
     virtualNetworkSubnetId: serviceVirtualNetwork.outputs.appSubnetID
   }
 }
