@@ -21,19 +21,19 @@ param allowedIpAddresses array
 @description('List of the environment variables to create in the Azure functions service.')
 param appSettings object
 
-param processorServiceName string = ''
-param processorUserAssignedIdentityName string = ''
-param applicationInsightsName string = ''
-param appServicePlanName string = ''
-param logAnalyticsName string = ''
 param resourceGroupName string = ''
+param appServiceName string = ''
+@allowed(['SystemAssigned', 'UserAssigned'])
+param appServiceIdentityType string = 'SystemAssigned'
+param appUserAssignedIdentityName string = ''
+param appServicePlanName string = ''
+param applicationInsightsName string = ''
+param logAnalyticsName string = ''
 param storageAccountName string = ''
 param vNetName string = ''
 param vaultName string = ''
 param disableLocalAuth bool = true
 param publicNetworkAccess string = 'Enabled'
-@allowed(['SystemAssigned', 'UserAssigned'])
-param appServiceIdentityType string = 'SystemAssigned'
 param keyVaultEnableSoftDelete bool = true
 
 var abbrs = loadJsonContent('./abbreviations.json')
@@ -54,7 +54,7 @@ module processorUserAssignedIdentity './core/identity/userAssignedIdentity.bicep
   params: {
     location: location
     tags: tags
-    identityName: !empty(processorUserAssignedIdentityName) ? processorUserAssignedIdentityName : '${abbrs.managedIdentityUserAssignedIdentities}processor-${resourceToken}'
+    identityName: !empty(appUserAssignedIdentityName) ? appUserAssignedIdentityName : '${abbrs.managedIdentityUserAssignedIdentities}processor-${resourceToken}'
   }
 }
 
@@ -63,7 +63,7 @@ module processor './app/processor.bicep' = {
   name: 'processor'
   scope: rg
   params: {
-    name: !empty(processorServiceName) ? processorServiceName : '${abbrs.webSitesFunctions}processor-${resourceToken}'
+    name: !empty(appServiceName) ? appServiceName : '${abbrs.webSitesFunctions}processor-${resourceToken}'
     location: location
     tags: tags
     applicationInsightsName: monitoring.outputs.applicationInsightsName
