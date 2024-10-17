@@ -21,7 +21,9 @@ var managedIdentityAuthSettings = identityType == 'UserAssigned'
       AzureWebJobsStorage__clientId: identityClientId
       APPLICATIONINSIGHTS_AUTHENTICATION_STRING: 'ClientId=${identityClientId};Authorization=AAD'
     }
-  : {}
+  : {
+      APPLICATIONINSIGHTS_AUTHENTICATION_STRING: 'Authorization=AAD'
+    }
 
 module processor '../core/host/functions-flexconsumption.bicep' = {
   name: '${serviceName}-functions-module'
