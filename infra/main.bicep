@@ -76,6 +76,7 @@ module processor './app/processor.bicep' = {
     identityClientId: appServiceIdentityType == 'UserAssigned' ? processorUserAssignedIdentity.outputs.identityClientId : ''
     appSettings: appSettings
     virtualNetworkSubnetId: serviceVirtualNetwork.outputs.appSubnetID
+    logAnalyticsWorkspaceId: monitoring.outputs.logAnalyticsWorkspaceId
   }
 }
 

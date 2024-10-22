@@ -32,6 +32,29 @@ param appSettings object = {}
 param instanceMemoryMB int = 2048
 param maximumInstanceCount int = 100
 
+// diagnostics
+param logAnalyticsWorkspaceId string
+param diagnosticLogCategoriesToEnable array = ['FunctionAppLogs']
+
+@description('Optional. The name of metrics that will be streamed.')
+@allowed([
+  'AllMetrics'
+])
+param diagnosticMetricsToEnable array = [
+  'AllMetrics'
+]
+
+var diagnosticsLogs = [for category in diagnosticLogCategoriesToEnable: {
+  category: category
+  enabled: true
+}]
+
+var diagnosticsMetrics = [for metric in diagnosticMetricsToEnable: {
+  category: metric
+  timeGrain: null
+  enabled: true
+}]
+
 var userAssignedIdentities = identityType == 'UserAssigned'
   ? {
       type: identityType
@@ -98,6 +121,16 @@ resource functions 'Microsoft.Web/sites@2023-12-01' = {
 
 resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing = if (!empty(applicationInsightsName)) {
   name: applicationInsightsName
+}
+
+resource app_diagnosticSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'diagnosticSettingsName'
+  properties: {
+    workspaceId: logAnalyticsWorkspaceId
+    metrics: diagnosticsMetrics
+    logs: diagnosticsLogs
+  }
+  scope: functions
 }
 
 output name string = functions.name

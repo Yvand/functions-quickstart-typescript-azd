@@ -15,6 +15,7 @@ param identityId string = ''
 param identityClientId string = ''
 @allowed(['SystemAssigned', 'UserAssigned'])
 param identityType string
+param logAnalyticsWorkspaceId string
 
 var managedIdentityAuthSettings = identityType == 'UserAssigned'
   ? {
@@ -42,6 +43,7 @@ module processor '../core/host/functions-flexconsumption.bicep' = {
     virtualNetworkSubnetId: virtualNetworkSubnetId
     instanceMemoryMB: instanceMemoryMB
     maximumInstanceCount: maximumInstanceCount
+    logAnalyticsWorkspaceId: logAnalyticsWorkspaceId
   }
 }
 
