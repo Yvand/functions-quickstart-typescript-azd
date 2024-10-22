@@ -11,6 +11,7 @@ param virtualNetworkSubnetId string = ''
 param identityType string
 @description('User assigned identity name')
 param identityId string
+param httpsOnly bool = true
 
 // Runtime Properties
 @allowed([
@@ -54,6 +55,7 @@ resource functions 'Microsoft.Web/sites@2023-12-01' = {
   identity: userAssignedIdentities
   properties: {
     serverFarmId: appServicePlanId
+    httpsOnly: httpsOnly
     functionAppConfig: {
       deployment: {
         storage: {
