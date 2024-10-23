@@ -78,12 +78,15 @@ resource functions 'Microsoft.Web/sites@2023-12-01' = {
     }
     virtualNetworkSubnetId: virtualNetworkSubnetId
     keyVaultReferenceIdentity: identityType == 'UserAssigned' ? identityId : 'SystemAssigned'
-    vnetRouteAllEnabled: true // workaround to access network-restricted vaults: https://learn.microsoft.com/en-us/azure/app-service/app-service-key-vault-references?tabs=azure-cli#access-network-restricted-vaults
-    vnetContentShareEnabled: true
+    
+    // Required workaround for access network-restricted vaults: https://learn.microsoft.com/en-us/azure/app-service/app-service-key-vault-references?tabs=azure-cli#access-network-restricted-vaults
+    // But not needed accoring to https://learn.microsoft.com/en-us/azure/azure-functions/functions-networking-options?tabs=azure-portal#outbound-ip-restrictions
+    vnetRouteAllEnabled: true
+    // vnetContentShareEnabled: true  // don't know if needed
 
     siteConfig: {
       keyVaultReferenceIdentity: identityType == 'UserAssigned' ? identityId : 'SystemAssigned'
-      vnetRouteAllEnabled: true // workaround to access network-restricted vaults: https://learn.microsoft.com/en-us/azure/app-service/app-service-key-vault-references?tabs=azure-cli#access-network-restricted-vaults
+      vnetRouteAllEnabled: true // see above
     }
   }
 
