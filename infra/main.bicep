@@ -35,6 +35,8 @@ param vaultName string = ''
 param disableLocalAuth bool = true
 param publicNetworkAccess string = 'Enabled'
 param keyVaultEnableSoftDelete bool = true
+@allowed(['Flex', 'Premium'])
+param appFunctionType string = 'Flex'
 
 var abbrs = loadJsonContent('./abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
@@ -115,8 +117,10 @@ module appServicePlan './core/host/appserviceplan.bicep' = {
     location: location
     tags: tags
     sku: {
-      name: 'FC1'
-      tier: 'FlexConsumption'
+      name: 'B2'
+      tier: 'Basic'
+      size: 'B2'
+      family: 'B'
     }
   }
 }

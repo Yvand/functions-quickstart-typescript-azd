@@ -77,7 +77,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-11-01' = {
               id: resourceId('Microsoft.Network/virtualNetworks/subnets/delegations', vNetName, 'app', 'delegation')
               properties: {
                 //Microsoft.App/environments is the correct delegation for Flex Consumption VNet integration
-                serviceName: 'Microsoft.App/environments'
+                serviceName: 'Microsoft.Web/serverfarms'
               }
             }
           ]

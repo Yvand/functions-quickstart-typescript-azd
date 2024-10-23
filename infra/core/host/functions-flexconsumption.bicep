@@ -12,6 +12,8 @@ param identityType string
 @description('User assigned identity name')
 param identityId string
 param httpsOnly bool = true
+@allowed(['Flex', 'Premium'])
+param appFunctionType string = 'Flex'
 
 // Runtime Properties
 @allowed([
@@ -56,37 +58,19 @@ resource functions 'Microsoft.Web/sites@2023-12-01' = {
   properties: {
     serverFarmId: appServicePlanId
     httpsOnly: httpsOnly
-    functionAppConfig: {
-      deployment: {
-        storage: {
-          type: 'blobContainer'
-          value: '${stg.properties.primaryEndpoints.blob}deploymentpackage'
-          authentication: {
-            type: identityType == 'SystemAssigned' ? 'SystemAssignedIdentity' : 'UserAssignedIdentity'
-            userAssignedIdentityResourceId: identityType == 'UserAssigned' ? identityId : ''
-          }
-        }
-      }
-      scaleAndConcurrency: {
-        instanceMemoryMB: instanceMemoryMB
-        maximumInstanceCount: maximumInstanceCount
-      }
-      runtime: {
-        name: runtimeName
-        version: runtimeVersion
-      }
-    }
+    functionAppConfig: null
     virtualNetworkSubnetId: virtualNetworkSubnetId
     keyVaultReferenceIdentity: identityType == 'UserAssigned' ? identityId : 'SystemAssigned'
     
     // Required workaround for access network-restricted vaults: https://learn.microsoft.com/en-us/azure/app-service/app-service-key-vault-references?tabs=azure-cli#access-network-restricted-vaults
     // But not needed accoring to https://learn.microsoft.com/en-us/azure/azure-functions/functions-networking-options?tabs=azure-portal#outbound-ip-restrictions
     vnetRouteAllEnabled: true
-    // vnetContentShareEnabled: true  // don't know if needed
+    vnetContentShareEnabled: true  // don't know if needed
 
     siteConfig: {
       keyVaultReferenceIdentity: identityType == 'UserAssigned' ? identityId : 'SystemAssigned'
       vnetRouteAllEnabled: true // see above
+      linuxFxVersion: 'NODE|18'
     }
   }
 
