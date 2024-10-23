@@ -12,6 +12,22 @@ param appSubnetName string = 'app'
 
 param tags object = {}
 
+resource nsg_subnet_pe 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
+  name: 'nsg-${peSubnetName}'
+  location: location
+  properties: {
+    securityRules: null
+  }
+}
+
+resource nsg_subnet_app 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
+  name: 'nsg-${appSubnetName}'
+  location: location
+  properties: {
+    securityRules: null
+  }
+}
+
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-11-01' = {
   name: vNetName
   location: location
@@ -36,6 +52,9 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-11-01' = {
           delegations: []
           privateEndpointNetworkPolicies: 'Disabled'
           privateLinkServiceNetworkPolicies: 'Enabled'
+          networkSecurityGroup: {
+            id: nsg_subnet_pe.id
+          }
         }
       }
       {
@@ -64,6 +83,9 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-11-01' = {
           ]
           privateEndpointNetworkPolicies: 'Disabled'
           privateLinkServiceNetworkPolicies: 'Enabled'
+          networkSecurityGroup: {
+            id: nsg_subnet_app.id
+          }
         }
       }
     ]
