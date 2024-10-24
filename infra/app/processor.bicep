@@ -15,6 +15,8 @@ param identityId string = ''
 param identityClientId string = ''
 @allowed(['SystemAssigned', 'UserAssigned'])
 param identityType string
+@allowed(['Flex', 'Premium'])
+param appFunctionType string = 'Flex'
 
 var managedIdentityAuthSettings = identityType == 'UserAssigned'
   ? {
@@ -25,7 +27,7 @@ var managedIdentityAuthSettings = identityType == 'UserAssigned'
       APPLICATIONINSIGHTS_AUTHENTICATION_STRING: 'Authorization=AAD'
     }
 
-module processor '../core/host/functions-flexconsumption.bicep' = {
+module processor '../core/host/functions-node.bicep' = {
   name: '${serviceName}-functions-module'
   params: {
     name: name
@@ -42,6 +44,7 @@ module processor '../core/host/functions-flexconsumption.bicep' = {
     virtualNetworkSubnetId: virtualNetworkSubnetId
     instanceMemoryMB: instanceMemoryMB
     maximumInstanceCount: maximumInstanceCount
+    appFunctionType: appFunctionType
   }
 }
 

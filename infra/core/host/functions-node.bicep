@@ -15,17 +15,9 @@ param httpsOnly bool = true
 @allowed(['Flex', 'Premium'])
 param appFunctionType string = 'Flex'
 
-// Runtime Properties
-@allowed([
-  'dotnet-isolated'
-  'node'
-  'python'
-  'java'
-  'powershell'
-  'custom'
-])
+@allowed(['node'])
 param runtimeName string
-@allowed(['3.10', '3.11', '7.4', '8.0', '10', '11', '17', '20'])
+@allowed(['20'])
 param runtimeVersion string
 param kind string = 'functionapp,linux'
 
@@ -45,6 +37,13 @@ var userAssignedIdentities = identityType == 'UserAssigned'
       type: identityType
     }
 
+var appSettingsPerFunctionType = appFunctionType == 'Premium'
+  ? {
+      FUNCTIONS_WORKER_RUNTIME: runtimeName
+      FUNCTIONS_EXTENSION_VERSION: '~4'
+    }
+  : {}
+
 resource stg 'Microsoft.Storage/storageAccounts@2022-09-01' existing = {
   name: storageAccountName
 }
@@ -58,29 +57,54 @@ resource functions 'Microsoft.Web/sites@2023-12-01' = {
   properties: {
     serverFarmId: appServicePlanId
     httpsOnly: httpsOnly
-    functionAppConfig: null
+    functionAppConfig: appFunctionType == 'Premium'
+      ? null
+      : {
+          deployment: {
+            storage: {
+              type: 'blobContainer'
+              value: '${stg.properties.primaryEndpoints.blob}deploymentpackage'
+              authentication: {
+                type: identityType == 'SystemAssigned' ? 'SystemAssignedIdentity' : 'UserAssignedIdentity'
+                userAssignedIdentityResourceId: identityType == 'UserAssigned' ? identityId : ''
+              }
+            }
+          }
+          scaleAndConcurrency: {
+            instanceMemoryMB: instanceMemoryMB
+            maximumInstanceCount: maximumInstanceCount
+          }
+          runtime: {
+            name: runtimeName
+            version: runtimeVersion
+          }
+        }
     virtualNetworkSubnetId: virtualNetworkSubnetId
     keyVaultReferenceIdentity: identityType == 'UserAssigned' ? identityId : 'SystemAssigned'
-    
+
     // Required workaround for access network-restricted vaults: https://learn.microsoft.com/en-us/azure/app-service/app-service-key-vault-references?tabs=azure-cli#access-network-restricted-vaults
     // But not needed accoring to https://learn.microsoft.com/en-us/azure/azure-functions/functions-networking-options?tabs=azure-portal#outbound-ip-restrictions
     vnetRouteAllEnabled: true
-    vnetContentShareEnabled: true  // don't know if needed
+    vnetContentShareEnabled: true // don't know if needed
 
     siteConfig: {
       keyVaultReferenceIdentity: identityType == 'UserAssigned' ? identityId : 'SystemAssigned'
       vnetRouteAllEnabled: true // see above
-      linuxFxVersion: 'NODE|18'
+      linuxFxVersion: appFunctionType == 'Premium' ? '${runtimeName}|${runtimeVersion}' : null
     }
   }
 
   resource configAppSettings 'config' = {
     name: 'appsettings'
-    properties: union(appSettings, {
-      AzureWebJobsStorage__accountName: stg.name
-      AzureWebJobsStorage__credential: 'managedidentity'
-      APPLICATIONINSIGHTS_CONNECTION_STRING: applicationInsights.properties.ConnectionString
-    })
+    properties: union(
+      appSettings,
+      {
+        AzureWebJobsStorage__accountName: stg.name
+        AzureWebJobsStorage__credential: 'managedidentity'
+        APPLICATIONINSIGHTS_CONNECTION_STRING: applicationInsights.properties.ConnectionString
+      },
+      appSettingsPerFunctionType
+    )
   }
 }
 
