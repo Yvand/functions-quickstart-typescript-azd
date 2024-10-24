@@ -7,7 +7,19 @@ param environmentName string
 
 @minLength(1)
 @description('Primary location for all resources')
-@allowed(['australiaeast', 'eastasia', 'eastus', 'eastus2', 'northeurope', 'southcentralus', 'southeastasia', 'swedencentral', 'uksouth', 'westus2', 'eastus2euap'])
+@allowed([
+  'australiaeast'
+  'eastasia'
+  'eastus'
+  'eastus2'
+  'northeurope'
+  'southcentralus'
+  'southeastasia'
+  'swedencentral'
+  'uksouth'
+  'westus2'
+  'eastus2euap'
+])
 @metadata({
   azd: {
     type: 'location'
@@ -27,6 +39,8 @@ param appServiceName string = ''
 param appServiceIdentityType string = 'SystemAssigned'
 param appUserAssignedIdentityName string = ''
 param appServicePlanName string = ''
+@allowed(['Flex', 'Premium'])
+param appFunctionType string = 'Flex'
 param applicationInsightsName string = ''
 param logAnalyticsName string = ''
 param storageAccountName string = ''
@@ -54,7 +68,9 @@ module processorUserAssignedIdentity './core/identity/userAssignedIdentity.bicep
   params: {
     location: location
     tags: tags
-    identityName: !empty(appUserAssignedIdentityName) ? appUserAssignedIdentityName : '${abbrs.managedIdentityUserAssignedIdentities}processor-${resourceToken}'
+    identityName: !empty(appUserAssignedIdentityName)
+      ? appUserAssignedIdentityName
+      : '${abbrs.managedIdentityUserAssignedIdentities}processor-${resourceToken}'
   }
 }
 
@@ -73,9 +89,12 @@ module processor './app/processor.bicep' = {
     storageAccountName: storage.outputs.name
     identityType: appServiceIdentityType
     identityId: appServiceIdentityType == 'UserAssigned' ? processorUserAssignedIdentity.outputs.identityId : ''
-    identityClientId: appServiceIdentityType == 'UserAssigned' ? processorUserAssignedIdentity.outputs.identityClientId : ''
+    identityClientId: appServiceIdentityType == 'UserAssigned'
+      ? processorUserAssignedIdentity.outputs.identityClientId
+      : ''
     appSettings: appSettings
     virtualNetworkSubnetId: serviceVirtualNetwork.outputs.appSubnetID
+    appFunctionType: appFunctionType
   }
 }
 
@@ -87,14 +106,14 @@ module storage './core/storage/storage-account.bicep' = {
     name: !empty(storageAccountName) ? storageAccountName : '${abbrs.storageStorageAccounts}${resourceToken}'
     location: location
     tags: tags
-    containers: [{name: 'deploymentpackage'}]
+    containers: [{ name: 'deploymentpackage' }]
     publicNetworkAccess: publicNetworkAccess
-    allowedIpAddresses:allowedIpAddresses
+    allowedIpAddresses: allowedIpAddresses
     virtualNetworkSubnetId: serviceVirtualNetwork.outputs.appSubnetID
   }
 }
 
-var storageRoleDefinitionId  = 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b' //Storage Blob Data Owner role
+var storageRoleDefinitionId = 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b' //Storage Blob Data Owner role
 
 // Allow access from processor to storage account using a managed identity
 module storageRoleAssignmentApi 'app/storage-Access.bicep' = {
@@ -103,9 +122,23 @@ module storageRoleAssignmentApi 'app/storage-Access.bicep' = {
   params: {
     storageAccountName: storage.outputs.name
     roleDefinitionID: storageRoleDefinitionId
-    principalID: appServiceIdentityType == 'UserAssigned' ? processorUserAssignedIdentity.outputs.identityPrincipalId : processor.outputs.SERVICE_API_IDENTITY_PRINCIPAL_ID
+    principalID: appServiceIdentityType == 'UserAssigned'
+      ? processorUserAssignedIdentity.outputs.identityPrincipalId
+      : processor.outputs.SERVICE_API_IDENTITY_PRINCIPAL_ID
   }
 }
+
+var appServiceSku = appFunctionType == 'Premium'
+  ? {
+      name: 'B2'
+      tier: 'Basic'
+      size: 'B2'
+      family: 'B'
+    }
+  : {
+      name: 'FC1'
+      tier: 'FlexConsumption'
+    }
 
 module appServicePlan './core/host/appserviceplan.bicep' = {
   name: 'appserviceplan'
@@ -114,10 +147,7 @@ module appServicePlan './core/host/appserviceplan.bicep' = {
     name: !empty(appServicePlanName) ? appServicePlanName : '${abbrs.webServerFarms}${resourceToken}'
     location: location
     tags: tags
-    sku: {
-      name: 'FC1'
-      tier: 'FlexConsumption'
-    }
+    sku: appServiceSku
   }
 }
 
@@ -129,6 +159,7 @@ module serviceVirtualNetwork 'app/vnet.bicep' = {
     location: location
     tags: tags
     vNetName: !empty(vNetName) ? vNetName : '${abbrs.networkVirtualNetworks}${resourceToken}'
+    appFunctionType: appFunctionType
   }
 }
 
@@ -151,8 +182,12 @@ module monitoring './core/monitor/monitoring.bicep' = {
   params: {
     location: location
     tags: tags
-    logAnalyticsName: !empty(logAnalyticsName) ? logAnalyticsName : '${abbrs.operationalInsightsWorkspaces}${resourceToken}'
-    applicationInsightsName: !empty(applicationInsightsName) ? applicationInsightsName : '${abbrs.insightsComponents}${resourceToken}'
+    logAnalyticsName: !empty(logAnalyticsName)
+      ? logAnalyticsName
+      : '${abbrs.operationalInsightsWorkspaces}${resourceToken}'
+    applicationInsightsName: !empty(applicationInsightsName)
+      ? applicationInsightsName
+      : '${abbrs.insightsComponents}${resourceToken}'
     disableLocalAuth: disableLocalAuth
   }
 }
@@ -166,7 +201,9 @@ module appInsightsRoleAssignmentApi './core/monitor/appinsights-access.bicep' = 
   params: {
     appInsightsName: monitoring.outputs.applicationInsightsName
     roleDefinitionID: monitoringRoleDefinitionId
-    principalID: appServiceIdentityType == 'UserAssigned' ? processorUserAssignedIdentity.outputs.identityPrincipalId : processor.outputs.SERVICE_API_IDENTITY_PRINCIPAL_ID
+    principalID: appServiceIdentityType == 'UserAssigned'
+      ? processorUserAssignedIdentity.outputs.identityPrincipalId
+      : processor.outputs.SERVICE_API_IDENTITY_PRINCIPAL_ID
   }
 }
 
@@ -199,7 +236,9 @@ module vaultRoleAssignmentApi './core/vault/vault-access.bicep' = {
   params: {
     keyVaultName: vault.outputs.name
     roleDefinitionID: keyVaultSecretsUserRoleDefinition.id
-    principalID: appServiceIdentityType == 'UserAssigned' ? processorUserAssignedIdentity.outputs.identityPrincipalId : processor.outputs.SERVICE_API_IDENTITY_PRINCIPAL_ID
+    principalID: appServiceIdentityType == 'UserAssigned'
+      ? processorUserAssignedIdentity.outputs.identityPrincipalId
+      : processor.outputs.SERVICE_API_IDENTITY_PRINCIPAL_ID
   }
 }
 

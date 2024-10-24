@@ -12,6 +12,9 @@ param appSubnetName string = 'app'
 
 param tags object = {}
 
+@allowed(['Flex', 'Premium'])
+param appFunctionType string = 'Flex'
+
 resource nsg_subnet_pe 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
   name: 'nsg-${peSubnetName}'
   location: location
@@ -77,7 +80,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-11-01' = {
               id: resourceId('Microsoft.Network/virtualNetworks/subnets/delegations', vNetName, 'app', 'delegation')
               properties: {
                 //Microsoft.App/environments is the correct delegation for Flex Consumption VNet integration
-                serviceName: 'Microsoft.App/environments'
+                serviceName: appFunctionType == 'Premium' ? 'Microsoft.Web/serverfarms' : 'Microsoft.App/environments'
               }
             }
           ]
