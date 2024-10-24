@@ -79,7 +79,7 @@ resource functions 'Microsoft.Web/sites@2023-12-01' = {
             version: runtimeVersion
           }
         }
-    virtualNetworkSubnetId: virtualNetworkSubnetId
+    virtualNetworkSubnetId: !empty(virtualNetworkSubnetId) ? virtualNetworkSubnetId : null
     keyVaultReferenceIdentity: identityType == 'UserAssigned' ? identityId : 'SystemAssigned'
 
     // Base on both links below, properties vnetRouteAllEnabled anbd vnetContentShareEnabled are not needed for flex functions:
