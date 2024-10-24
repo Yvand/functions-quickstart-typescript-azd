@@ -39,6 +39,8 @@ param appServiceName string = ''
 param appServiceIdentityType string = 'SystemAssigned'
 param appUserAssignedIdentityName string = ''
 param appServicePlanName string = ''
+@allowed(['Flex', 'Premium'])
+param appFunctionType string = 'Flex'
 param applicationInsightsName string = ''
 param logAnalyticsName string = ''
 param storageAccountName string = ''
@@ -47,8 +49,6 @@ param vaultName string = ''
 param disableLocalAuth bool = true
 param publicNetworkAccess string = 'Enabled'
 param keyVaultEnableSoftDelete bool = true
-@allowed(['Flex', 'Premium'])
-param appFunctionType string = 'Flex'
 
 var abbrs = loadJsonContent('./abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
