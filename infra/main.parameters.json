@@ -22,6 +22,9 @@
         "${ALLOWEDIPADDRESSES}"
       ]
     },
+    "keyVaultEnableSoftDelete": {
+      "value": false
+    },
     "appSettings": {
       "value": {
         "setting1": "value",
