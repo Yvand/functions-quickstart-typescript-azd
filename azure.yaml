@@ -2,7 +2,7 @@
 
 name: Yvand/functions-quickstart-typescript-azd
 metadata:
-  template: Yvand/functions-quickstart-typescript-azd@1.0.0
+  template: Yvand/functions-quickstart-typescript-azd@1.0.0.rc-1
 services:
   processor:
     project: .
