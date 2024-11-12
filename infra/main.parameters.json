@@ -11,9 +11,6 @@
     "resourceGroupName": {
       "value": "${AZURE_ENV_NAME}"
     },
-    "apiServiceName": {
-      "value": "${AZURE_ENV_NAME}"
-    },
     "apiServiceIdentityType": {
       "value": "SystemAssigned"
     },
@@ -22,9 +19,12 @@
         "${ALLOWEDIPADDRESSES}"
       ]
     },
+    "addKkeyVault": {
+      "value": false
+    },
     "appSettings": {
       "value": {
-        "setting1": "value",
+        "setting1": "sampleValue",
         "setting2": 42
       }
     }
